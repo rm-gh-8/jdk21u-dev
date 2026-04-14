@@ -262,6 +262,7 @@ java/awt/print/PrinterJob/GlyphPositions.java 7003378 generic-all
 java/awt/Choice/ChoiceMouseWheelTest/ChoiceMouseWheelTest.java 8366852 generic-all
 java/awt/Component/GetScreenLocTest/GetScreenLocTest.java 4753654 generic-all
 java/awt/Component/SetEnabledPerformance/SetEnabledPerformance.java 8165863 macosx-all
+java/awt/Container/MouseEnteredTest.java 8382192 macosx-all
 java/awt/Clipboard/PasteNullToTextComponentsTest.java 8234140 macosx-all,windows-all
 java/awt/Clipboard/NoOwnerNoTargetsTest.java 8234140 macosx-all
 java/awt/Clipboard/LostOwnershipChainTest/SystemClipboard2ProcTest.java 8234140 macosx-all
