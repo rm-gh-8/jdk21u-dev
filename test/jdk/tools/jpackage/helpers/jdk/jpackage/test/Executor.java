@@ -29,9 +29,9 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.StringReader;
+import java.io.Writer;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -48,8 +48,16 @@ import jdk.jpackage.test.Functional.ThrowingSupplier;
 public final class Executor extends CommandArguments<Executor> {
 
     public static Executor of(String... cmdline) {
-        return new Executor().setExecutable(cmdline[0]).addArguments(
-                Arrays.copyOfRange(cmdline, 1, cmdline.length));
+        return of(List.of(cmdline));
+    }
+
+    public static Executor of(List<String> cmdline) {
+        cmdline.forEach(Objects::requireNonNull);
+        return new Executor().setExecutable(cmdline.getFirst()).addArguments(cmdline.subList(1, cmdline.size()));
+    }
+
+    public static Executor of(ToolProvider toolProvider, String... args) {
+        return new Executor().setToolProvider(toolProvider).addArguments(List.of(args));
     }
 
     public Executor() {
@@ -388,8 +396,8 @@ public final class Executor extends CommandArguments<Executor> {
                         || saveOutputType.contains(SaveOutputType.FULL)) {
                     outputLines = outReader.lines().collect(Collectors.toList());
                 } else {
-                    outputLines = Arrays.asList(
-                            outReader.lines().findFirst().orElse(null));
+                    outputLines = Optional.ofNullable(outReader.readLine()).map(List::of).orElseGet(List::of);
+                    outReader.transferTo(Writer.nullWriter());
                 }
             } finally {
                 if (saveOutputType.contains(SaveOutputType.DUMP) && outputLines != null) {
@@ -449,15 +457,11 @@ public final class Executor extends CommandArguments<Executor> {
             final var exitCode = runToolProvider(ps, ps);
             ps.flush();
             final List<String> output;
+            final var bufAsString = buf.toString();
             try (BufferedReader bufReader = new BufferedReader(new StringReader(
-                    buf.toString()))) {
+                    bufAsString))) {
                 if (saveOutputType.contains(SaveOutputType.FIRST_LINE)) {
-                    String firstLine = bufReader.lines().findFirst().orElse(null);
-                    if (firstLine != null) {
-                        output = List.of(firstLine);
-                    } else {
-                        output = null;
-                    }
+                    output = bufReader.lines().findFirst().map(List::of).orElseGet(List::of);
                 } else if (saveOutputType.contains(SaveOutputType.FULL)) {
                     output = bufReader.lines().collect(Collectors.toUnmodifiableList());
                 } else {
@@ -469,7 +473,7 @@ public final class Executor extends CommandArguments<Executor> {
                     if (saveOutputType.contains(SaveOutputType.FULL)) {
                         lines = output.stream();
                     } else {
-                        lines = bufReader.lines();
+                        lines = new BufferedReader(new StringReader(bufAsString)).lines();
                     }
                     lines.forEach(System.out::println);
                 }
